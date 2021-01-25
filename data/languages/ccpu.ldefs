@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language_definitions>
+  <language processor="MediaTek CCPU"
+            endian="little"
+            size="32"
+            variant="default"
+            version="0.1"
+            slafile="ccpu.sla"
+            processorspec="ccpu.pspec"
+            id="CCPU:LE:32:default">
+    <description>MediaTek CCPU (GCPU), little endian</description>
+    <compiler name="default" spec="ccpu.cspec" id="default"/>
+  </language>
+</language_definitions>

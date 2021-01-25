@@ -1,0 +1,190 @@
+define alignment=4;
+
+define space IM type=ram_space size=2 default;
+define space DM type=ram_space size=2;
+define space register type=register_space size=4;
+
+define register offset=0 size=4 [
+	r0  r1  r2  r3
+	r4  r5  r6  r7
+	r8  r9  r10 r11
+	r12 r13 r14 r15
+	r16 r17 r18 r19
+	r20 r21 r22 r23
+	r24 r25 r26 r27
+	r28 r29 r30 r31
+];
+
+define register offset=0x1000 size=4 [
+	mulh
+	loop
+	flags
+	pc
+	sp  # Dummy stack pointer to make the decompiler work.
+];
+
+define context flags
+	overflow = (2, 2)  # Guessed
+	carry = (1, 1)  # Guessed
+	zero = (0, 0)  # Guessed
+;
+
+define token instr(32)
+	op2119 = (19, 21)
+	op2116 = (16, 21)
+	op2115 = (15, 21)
+	op2111 = (11, 21)
+	op2105 = (5, 21)
+	op1515 = (15, 15)
+	op1414 = (14, 14)
+	op1010 = (10, 10)
+
+	sa1814 = (14, 18)
+	sa1511 = (11, 15)
+	sa1410 = (10, 14)
+	sa1309 = (9, 13)
+	sa0905 = (5, 9)
+
+	sb0905 = (5, 9)
+	sb0400 = (0, 4)
+
+	ds1816 = (16, 18)
+	ds0400 = (0, 4)
+	ds0300 = (0, 3)
+
+	en1309 = (9, 13)
+	st0804 = (4, 8)
+
+	im1500 = (0, 15)
+	im1505 = (5, 15)
+	im1300 = (0, 13)
+	im1000 = (0, 10)
+	im0905 = (5, 9)
+;
+
+attach variables [ sa1814 sa1511 sa1410 sa1309 sb0905 ds0400 ] [
+	r0  r1  r2  r3
+	r4  r5  r6  r7
+	r8  r9  r10 r11
+	r12 r13 r14 r15
+	r16 r17 r18 r19
+	r20 r21 r22 r23
+	r24 r25 r26 r27
+	r28 r29 r30 r31
+];
+
+attach variables [ ds0300 ] [
+	r0  r1  r2  r3
+	r4  r5  r6  r7
+	r8  r9  r10 r11
+	r12 r13 r14 r15
+];
+
+attach variables [ ds1816 ] [
+	r0  r1  r2  r3
+	r4  r5  r6  r7
+];
+
+
+# TODO: Find the difference between signed and unsigned add/sub-with-carry.
+# TODO: Set flags for arithmetic operations.
+:nop is op2116=0x00 & op1515=0 {}
+:add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 +  sb0905; }
+:sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 -  sb0905; }
+:and ds0400, sa1410, sb0905 is op2116=0x03 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 &  sb0905; }
+:or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; }
+:lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; }
+:lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 - sb0905 - 1; }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 - sb0905 - 0; }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 + sb0905 + 0; }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 + sb0905 + 1; }
+
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 + sb0905 + 0; }
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 + sb0905 + 1; }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 - sb0905 - 1; }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 - sb0905 - 0; }
+:mul  ds0400, sa1410, sb0905 is op2115=0x32 & sa1410 & sb0905 & ds0400 {
+	local res:8 = zext(sa1410) * zext(sb0905);
+	ds0400 = res:4;
+	mulh = res(4);
+}
+:xor ds0400, sa1410, sb0905 is op2115=0x34 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 ^ sb0905; }
+
+:not ds0400, sa1309 is op2115=0x33 & op1414=0 & sa1309 & ds0400 { ds0400 = ~sa1309; }
+
+
+:add ds0400, sa1410, #im0905 is op2116=0x08 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 +  im0905; }
+:sub ds0400, sa1410, #im0905 is op2116=0x09 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 -  im0905; }
+:lsl ds0400, sa1410, #im0905 is op2116=0x0a & sa1410 & im0905 & ds0400 { ds0400 = sa1410 << im0905; }
+:lsr ds0400, sa1410, #im0905 is op2116=0x0b & sa1410 & im0905 & ds0400 { ds0400 = sa1410 >> im0905; }
+
+# Load 11-bit unsigned immediate into register.
+:ld ds0400, #im1505 is op2116=0x0e & im1505 & ds0400 { ds0400 = im1505; }
+
+
+# Load 16-bit unsigned immediate into register.
+:ld ds1816, #im1500 is op2119=0x2 & ds1816 & im1500 { ds1816 = im1500; }
+
+
+# Load 32-bit word into register from 32-bit aligned address immediate.
+:ld ds0400, [#addr] is op2116=0x0d & im1505 & ds0400 [ addr = im1505 * 4; ] { ds0400 = *[DM]:4 addr:2; }
+
+
+# Store 32-bit word from register at 32-bit aligned address immediate.
+:st sa1511, [#addr] is op2116=0x0f & sa1511 & im1000 [ addr = im1000 * 4; ] { *[DM]:4 addr:2 = sa1511; }
+
+
+:exti ds0300, sa1814, #st0804, #en1309 is op2119=0x6 & sa1814 & en1309 & st0804 & ds0300 {
+	local width = st0804 - en1309 + 1;
+	local mask = (1 << width) - 1;
+	local shifted = sa1814 >> en1309;
+	ds0300 = shifted & mask;
+}
+:puti ds0300, sa1814, #st0804, #en1309 is op2119=0x7 & sa1814 & en1309 & st0804 & ds0300 {
+	local width = st0804 - en1309 + 1;
+	local mask = ((1 << width) - 1) << en1309;
+	local masked_src = sa1814 & mask;
+	local masked_dst = ds0300 & ~mask;
+	ds0300 = masked_dst | masked_src;
+}
+
+
+:jmp    #jump_dest is op2115=0x35 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { goto [jump_dest:2]; }
+:call   #jump_dest is op2115=0x36 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { call [jump_dest:2]; }
+:jmpz   #jump_dest is op2115=0x37 & op1414=0 & im1300 & zero     [ jump_dest = im1300 * 4; ] { if !zero:1     goto inst_next; goto [jump_dest:2]; }
+:jmpnz  #jump_dest is op2115=0x38 & op1414=0 & im1300 & zero     [ jump_dest = im1300 * 4; ] { if  zero:1     goto inst_next; goto [jump_dest:2]; }
+:jmpc   #jump_dest is op2115=0x39 & op1414=0 & im1300 & carry    [ jump_dest = im1300 * 4; ] { if !carry:1    goto inst_next; goto [jump_dest:2]; }
+:jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 & overflow [ jump_dest = im1300 * 4; ] { if !overflow:1 goto inst_next; goto [jump_dest:2]; }
+:ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
+:rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
+:ldcnt             is op2115=0x3d & op1414=0 & im1300 {}  # TODO
+:lp                is op2115=0x3e & op1414=0 & im1300 {}  # TODO
+
+
+# Load 32-bit word into register from 32-bit aligned address from register.
+:ldw ds0400, [sb0905] is op2111=0x3f0 & op1010=0 & sb0905 & ds0400 { local addr = sb0905 * 4; ds0400 = *[DM]:4 addr:2; }
+
+# Store 32-bit word from register at 32-bit aligned address from register.
+:stw sa0905, [sb0400] is op2111=0x3f1 & op1010=0 & sa0905 & sb0400 { local addr:2 = sb0400 * 4; *[DM]:4 addr = sa0905; }
+
+# Load byte into register from byte address from register. Byte is loaded into the register at the address modulo four.
+:ldb ds0400, [sb0905] is op2111=0x4f0 & op1010=0 & sb0905 & ds0400 {
+	local byte = zext(*[DM]:1 sb0905:2);
+	local shift = (sb0905 % 4) * 8;
+	local shifted = byte << shift;
+	local mask = ~(0xff << shift);
+	local masked = ds0400 & mask;
+	ds0400 = masked | shifted;
+}
+
+# Store byte from register at byte address from register. Byte is loaded from the register at the address modulo four.
+:stb sa0905, [sb0400] is op2111=0x4f1 & op1010=0 & sa0905 & sb0400 {
+	local shift = (sb0400 % 4) * 8;
+	local shifted = sa0905 >> shift;
+	local masked:1 = shifted & 0xff;
+	*[DM]:1 sb0400:2 = masked;
+}
+
+
+:mv ds0400, mulh is op2105=0x7e40 & ds0400 & mulh { ds0400 = mulh; }

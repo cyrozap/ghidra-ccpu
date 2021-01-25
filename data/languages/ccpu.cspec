@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<compiler_spec>
+  <global>
+    <range space="IM"/>
+    <range space="DM"/>
+  </global>
+
+  <!-- This is just a dummy stack pointer to make the decompiler work. -->
+  <stackpointer register="sp" space="DM"/>
+
+  <default_proto>
+    <prototype extrapop="0" stackshift="0" strategy="register" name="__stdcall">
+      <input>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r0"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r0"/>
+        </pentry>
+      </output>
+    </prototype>
+  </default_proto>
+</compiler_spec>
