@@ -83,6 +83,56 @@ attach variables [ ds1816 ] [
 	r4  r5  r6  r7
 ];
 
+macro addflags(op1, op2) {  # Flags set by signed add instructions
+	C = (scarry(op1,op2));  # Check for signed carry
+	V = C;
+}
+
+macro subflags(op1, op2) {  # Flags set by signed sub instructions
+	C = (op1 s< op2);  # Check for signed carry
+	V = C;
+}
+
+macro addcflags(op1, op2) {  # Flags set by signed add with carry instruction
+	local old_C = C;
+	C = (scarry(op1,op2));  # Check for carry
+	if C goto <skip>;
+	local tmp = op1 + op2;
+	C = (scarry(tmp,zext(old_C)));
+	<skip>
+	V = C;
+}
+
+macro subcflags(op1, op2) {  # Flags set by signed sub with carry instruction
+	local old_C = C;
+	C = (op1 s< op2);  # Check for carry
+	if C goto <skip>;
+	local tmp = op1 - op2;
+	C = (tmp s< zext(old_C));
+	<skip>
+	V = C;
+}
+
+macro adducflags(op1, op2) {  # Flags set by unsigned add with carry instruction
+	local old_C = C;
+	C = (carry(op1,op2));  # Check for carry
+	if C goto <skip>;
+	local tmp = op1 + op2;
+	C = (carry(tmp,zext(old_C)));
+	<skip>
+	V = C;
+}
+
+macro subucflags(op1, op2) {  # Flags set by unsigned sub with carry instruction
+	local old_C = C;
+	C = (op1 < op2);  # Check for carry
+	if C goto <skip>;
+	local tmp = op1 - op2;
+	C = (tmp < zext(old_C));
+	<skip>
+	V = C;
+}
+
 macro resultflags(op1) { # Set Z flag for results
 	Z = op1 == 0;
 }
@@ -91,17 +141,17 @@ macro resultflags(op1) { # Set Z flag for results
 # TODO: Find the difference between signed and unsigned add/sub-with-carry.
 # TODO: Set flags for arithmetic operations.
 :nop is op2116=0x00 & op1515=0 {}
-:add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 +  sb0905; resultflags(ds0400); }
-:sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 -  sb0905; resultflags(ds0400); }
+:add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { addflags(sa1410,sb0905); ds0400 = sa1410 +  sb0905; resultflags(ds0400); }
+:sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { subflags(sa1410,sb0905); ds0400 = sa1410 -  sb0905; resultflags(ds0400); }
 :and ds0400, sa1410, sb0905 is op2116=0x03 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 &  sb0905; resultflags(ds0400); }
 :or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; resultflags(ds0400); }
 :lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; resultflags(ds0400); }
 :lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; resultflags(ds0400); }
-:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
-:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { subucflags(sa1410,sb0905); ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { adducflags(sa1410,sb0905); ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
 
-:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
-:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { addcflags(sa1410,sb0905); ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { subcflags(sa1410,sb0905); ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
 :mul  ds0400, sa1410, sb0905 is op2115=0x32 & sa1410 & sb0905 & ds0400 {
 	local res:8 = zext(sa1410) * zext(sb0905);
 	ds0400 = res:4;
@@ -112,8 +162,8 @@ macro resultflags(op1) { # Set Z flag for results
 :not ds0400, sa1309 is op2115=0x33 & op1414=0 & sa1309 & ds0400 { ds0400 = ~sa1309; resultflags(ds0400); }
 
 
-:add ds0400, sa1410, #im0905 is op2116=0x08 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 +  im0905; resultflags(ds0400); }
-:sub ds0400, sa1410, #im0905 is op2116=0x09 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 -  im0905; resultflags(ds0400); }
+:add ds0400, sa1410, #im0905 is op2116=0x08 & sa1410 & im0905 & ds0400 { addflags(sa1410,im0905); ds0400 = sa1410 +  im0905; resultflags(ds0400); }
+:sub ds0400, sa1410, #im0905 is op2116=0x09 & sa1410 & im0905 & ds0400 { subflags(sa1410,im0905); ds0400 = sa1410 -  im0905; resultflags(ds0400); }
 :lsl ds0400, sa1410, #im0905 is op2116=0x0a & sa1410 & im0905 & ds0400 { ds0400 = sa1410 << im0905; resultflags(ds0400); }
 :lsr ds0400, sa1410, #im0905 is op2116=0x0b & sa1410 & im0905 & ds0400 { ds0400 = sa1410 >> im0905; resultflags(ds0400); }
 
