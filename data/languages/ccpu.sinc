@@ -31,7 +31,7 @@ define token instr(32)
 	op2116 = (16, 21)
 	op2115 = (15, 21)
 	op2111 = (11, 21)
-	op2105 = (5, 21)
+	op2106 = (6, 21)
 	op1515 = (15, 15)
 	op1414 = (14, 14)
 	op1010 = (10, 10)
@@ -236,4 +236,5 @@ macro resultflags(op1) { # Set Z flag for results
 }
 
 
-:mv ds0400, mulh is op2105=0x7e40 & ds0400 & mulh { ds0400 = mulh; resultflags(ds0400); }
+# Move the high 32-bits of the most recent multiplication product into a register.
+:mv ds0400, mulh is op2106=0x7e40 & ds0400 & mulh { ds0400 = mulh; }
