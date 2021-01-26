@@ -12,12 +12,102 @@
     <prototype extrapop="0" stackshift="0" strategy="register" name="__stdcall">
       <input>
         <pentry minsize="1" maxsize="4" extension="inttype">
-          <register name="r0"/>
+          <register name="r16"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r17"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r18"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r19"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r20"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r21"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r22"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r23"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r24"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r25"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r26"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r27"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r28"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r29"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r30"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r31"/>
         </pentry>
       </input>
       <output>
         <pentry minsize="1" maxsize="4" extension="inttype">
-          <register name="r0"/>
+          <register name="r16"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r17"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r18"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r19"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r20"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r21"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r22"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r23"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r24"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r25"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r26"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r27"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r28"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r29"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r30"/>
+        </pentry>
+        <pentry minsize="1" maxsize="4" extension="inttype">
+          <register name="r31"/>
         </pentry>
       </output>
     </prototype>
