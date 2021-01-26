@@ -18,16 +18,13 @@ define register offset=0 size=4 [
 define register offset=0x1000 size=4 [
 	mulh
 	loop
-	flags
 	pc
 	sp  # Dummy stack pointer to make the decompiler work.
 ];
 
-define context flags
-	overflow = (2, 2)  # Guessed
-	carry = (1, 1)  # Guessed
-	zero = (0, 0)  # Guessed
-;
+define register offset=0x2000 size=1 [
+	V Z C
+];
 
 define token instr(32)
 	op2119 = (19, 21)
@@ -95,15 +92,11 @@ attach variables [ ds1816 ] [
 :or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; }
 :lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; }
 :lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; }
-:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 - sb0905 - 1; }
-:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 - sb0905 - 0; }
-:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 + sb0905 + 0; }
-:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 + sb0905 + 1; }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); }
 
-:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 + sb0905 + 0; }
-:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 + sb0905 + 1; }
-:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 & carry=0 { ds0400 = sa1410 - sb0905 - 1; }
-:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 & carry=1 { ds0400 = sa1410 - sb0905 - 0; }
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); }
 :mul  ds0400, sa1410, sb0905 is op2115=0x32 & sa1410 & sb0905 & ds0400 {
 	local res:8 = zext(sa1410) * zext(sb0905);
 	ds0400 = res:4;
@@ -152,10 +145,10 @@ attach variables [ ds1816 ] [
 
 :jmp    #jump_dest is op2115=0x35 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { goto [jump_dest:2]; }
 :call   #jump_dest is op2115=0x36 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { call [jump_dest:2]; }
-:jmpz   #jump_dest is op2115=0x37 & op1414=0 & im1300 & zero     [ jump_dest = im1300 * 4; ] { if !zero:1     goto inst_next; goto [jump_dest:2]; }
-:jmpnz  #jump_dest is op2115=0x38 & op1414=0 & im1300 & zero     [ jump_dest = im1300 * 4; ] { if  zero:1     goto inst_next; goto [jump_dest:2]; }
-:jmpc   #jump_dest is op2115=0x39 & op1414=0 & im1300 & carry    [ jump_dest = im1300 * 4; ] { if !carry:1    goto inst_next; goto [jump_dest:2]; }
-:jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 & overflow [ jump_dest = im1300 * 4; ] { if !overflow:1 goto inst_next; goto [jump_dest:2]; }
+:jmpz   #jump_dest is op2115=0x37 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !Z goto inst_next; goto [jump_dest:2]; }
+:jmpnz  #jump_dest is op2115=0x38 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if  Z goto inst_next; goto [jump_dest:2]; }
+:jmpc   #jump_dest is op2115=0x39 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !C goto inst_next; goto [jump_dest:2]; }
+:jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !V goto inst_next; goto [jump_dest:2]; }
 :ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
 :rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
 :ldcnt             is op2115=0x3d & op1414=0 & im1300 {}  # TODO
