@@ -96,11 +96,11 @@ macro resultflags(op1) { # Set Z flag for results
 :or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; resultflags(ds0400); }
 :lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; resultflags(ds0400); }
 :lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; resultflags(ds0400); }
-:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); resultflags(ds0400); }
-:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); resultflags(ds0400); }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
 
-:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); resultflags(ds0400); }
-:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); resultflags(ds0400); }
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext( C); resultflags(ds0400); }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(!C); resultflags(ds0400); }
 :mul  ds0400, sa1410, sb0905 is op2115=0x32 & sa1410 & sb0905 & ds0400 {
 	local res:8 = zext(sa1410) * zext(sb0905);
 	ds0400 = res:4;
