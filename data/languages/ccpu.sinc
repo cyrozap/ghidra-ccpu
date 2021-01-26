@@ -138,8 +138,6 @@ macro resultflags(op1) { # Set Z flag for results
 }
 
 
-# TODO: Find the difference between signed and unsigned add/sub-with-carry.
-# TODO: Set flags for arithmetic operations.
 :nop is op2116=0x00 & op1515=0 {}
 :add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { addflags(sa1410,sb0905); ds0400 = sa1410 +  sb0905; resultflags(ds0400); }
 :sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { subflags(sa1410,sb0905); ds0400 = sa1410 -  sb0905; resultflags(ds0400); }
