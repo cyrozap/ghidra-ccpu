@@ -59,7 +59,7 @@ define token instr(32)
 	im0905 = (5, 9)
 ;
 
-attach variables [ sa1814 sa1511 sa1410 sa1309 sb0905 ds0400 ] [
+attach variables [ sa1814 sa1511 sa1410 sa1309 sa0905 sb0905 sb0400 ds0400 ] [
 	r0  r1  r2  r3
 	r4  r5  r6  r7
 	r8  r9  r10 r11
@@ -165,7 +165,7 @@ macro resultflags(op1) { # Set Z flag for results
 :ldw ds0400, [sb0905] is op2111=0x3f0 & op1010=0 & sb0905 & ds0400 { local addr = sb0905 * 4; ds0400 = *[DM]:4 addr:2; resultflags(ds0400); }
 
 # Store 32-bit word from register at 32-bit aligned address from register.
-:stw sa0905, [sb0400] is op2111=0x3f1 & op1010=0 & sa0905 & sb0400 { local addr:2 = sb0400 * 4; *[DM]:4 addr = sa0905; }
+:stw sa0905, [sb0400] is op2111=0x3f1 & op1010=0 & sa0905 & sb0400 { local addr = sb0400 * 4; *[DM]:4 addr:2 = sa0905; }
 
 # Load byte into register from byte address from register. Byte is loaded into the register at the address modulo four.
 :ldb ds0400, [sb0905] is op2111=0x4f0 & op1010=0 & sb0905 & ds0400 {
@@ -182,8 +182,8 @@ macro resultflags(op1) { # Set Z flag for results
 :stb sa0905, [sb0400] is op2111=0x4f1 & op1010=0 & sa0905 & sb0400 {
 	local shift = (sb0400 % 4) * 8;
 	local shifted = sa0905 >> shift;
-	local masked:1 = shifted & 0xff;
-	*[DM]:1 sb0400:2 = masked;
+	local masked = shifted & 0xff;
+	*[DM]:1 sb0400:2 = masked:1;
 }
 
 
