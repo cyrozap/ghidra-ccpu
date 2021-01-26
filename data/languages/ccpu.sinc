@@ -41,6 +41,7 @@ define token instr(32)
 	sa1410 = (10, 14)
 	sa1309 = (9, 13)
 	sa0905 = (5, 9)
+	sa0400 = (0, 4)
 
 	sb0905 = (5, 9)
 	sb0400 = (0, 4)
@@ -59,7 +60,7 @@ define token instr(32)
 	im0905 = (5, 9)
 ;
 
-attach variables [ sa1814 sa1511 sa1410 sa1309 sa0905 sb0905 sb0400 ds0400 ] [
+attach variables [ sa1814 sa1511 sa1410 sa1309 sa0905 sa0400 sb0905 sb0400 ds0400 ] [
 	r0  r1  r2  r3
 	r4  r5  r6  r7
 	r8  r9  r10 r11
@@ -157,8 +158,8 @@ macro resultflags(op1) { # Set Z flag for results
 :jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !V goto inst_next; goto [jump_dest:2]; }
 :ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
 :rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
-:ldcnt             is op2115=0x3d & op1414=0 & im1300 {}  # TODO
-:lp                is op2115=0x3e & op1414=0 & im1300 {}  # TODO
+:ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 {}  # TODO
+:lp     #loop_end  is op2115=0x3e & op1414=0 & im1300 [ loop_end = im1300 * 4; ] {}  # TODO
 
 
 # Load 32-bit word into register from 32-bit aligned address from register.
