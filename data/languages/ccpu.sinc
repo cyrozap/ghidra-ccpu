@@ -82,46 +82,50 @@ attach variables [ ds1816 ] [
 	r4  r5  r6  r7
 ];
 
+macro resultflags(op1) { # Set Z flag for results
+	Z = op1 == 0;
+}
+
 
 # TODO: Find the difference between signed and unsigned add/sub-with-carry.
 # TODO: Set flags for arithmetic operations.
 :nop is op2116=0x00 & op1515=0 {}
-:add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 +  sb0905; }
-:sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 -  sb0905; }
-:and ds0400, sa1410, sb0905 is op2116=0x03 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 &  sb0905; }
-:or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; }
-:lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; }
-:lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; }
-:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); }
-:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); }
+:add ds0400, sa1410, sb0905 is op2116=0x01 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 +  sb0905; resultflags(ds0400); }
+:sub ds0400, sa1410, sb0905 is op2116=0x02 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 -  sb0905; resultflags(ds0400); }
+:and ds0400, sa1410, sb0905 is op2116=0x03 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 &  sb0905; resultflags(ds0400); }
+:or  ds0400, sa1410, sb0905 is op2116=0x04 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 |  sb0905; resultflags(ds0400); }
+:lsl ds0400, sa1410, sb0905 is op2116=0x05 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 << sb0905; resultflags(ds0400); }
+:lsr ds0400, sa1410, sb0905 is op2116=0x06 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 >> sb0905; resultflags(ds0400); }
+:subuc ds0400, sa1410, sb0905 is op2116=0x07 & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); resultflags(ds0400); }
+:adduc ds0400, sa1410, sb0905 is op2116=0x0c & op1515=0 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); resultflags(ds0400); }
 
-:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); }
-:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); }
+:addc ds0400, sa1410, sb0905 is op2115=0x30 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 + sb0905 + zext(C    ); resultflags(ds0400); }
+:subc ds0400, sa1410, sb0905 is op2115=0x31 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 - sb0905 - zext(C ^ 1); resultflags(ds0400); }
 :mul  ds0400, sa1410, sb0905 is op2115=0x32 & sa1410 & sb0905 & ds0400 {
 	local res:8 = zext(sa1410) * zext(sb0905);
 	ds0400 = res:4;
 	mulh = res(4);
 }
-:xor ds0400, sa1410, sb0905 is op2115=0x34 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 ^ sb0905; }
+:xor ds0400, sa1410, sb0905 is op2115=0x34 & sa1410 & sb0905 & ds0400 { ds0400 = sa1410 ^ sb0905; resultflags(ds0400); }
 
-:not ds0400, sa1309 is op2115=0x33 & op1414=0 & sa1309 & ds0400 { ds0400 = ~sa1309; }
+:not ds0400, sa1309 is op2115=0x33 & op1414=0 & sa1309 & ds0400 { ds0400 = ~sa1309; resultflags(ds0400); }
 
 
-:add ds0400, sa1410, #im0905 is op2116=0x08 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 +  im0905; }
-:sub ds0400, sa1410, #im0905 is op2116=0x09 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 -  im0905; }
-:lsl ds0400, sa1410, #im0905 is op2116=0x0a & sa1410 & im0905 & ds0400 { ds0400 = sa1410 << im0905; }
-:lsr ds0400, sa1410, #im0905 is op2116=0x0b & sa1410 & im0905 & ds0400 { ds0400 = sa1410 >> im0905; }
+:add ds0400, sa1410, #im0905 is op2116=0x08 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 +  im0905; resultflags(ds0400); }
+:sub ds0400, sa1410, #im0905 is op2116=0x09 & sa1410 & im0905 & ds0400 { ds0400 = sa1410 -  im0905; resultflags(ds0400); }
+:lsl ds0400, sa1410, #im0905 is op2116=0x0a & sa1410 & im0905 & ds0400 { ds0400 = sa1410 << im0905; resultflags(ds0400); }
+:lsr ds0400, sa1410, #im0905 is op2116=0x0b & sa1410 & im0905 & ds0400 { ds0400 = sa1410 >> im0905; resultflags(ds0400); }
 
 # Load 11-bit unsigned immediate into register.
-:ld ds0400, #im1505 is op2116=0x0e & im1505 & ds0400 { ds0400 = im1505; }
+:ld ds0400, #im1505 is op2116=0x0e & im1505 & ds0400 { ds0400 = im1505; resultflags(ds0400); }
 
 
 # Load 16-bit unsigned immediate into register.
-:ld ds1816, #im1500 is op2119=0x2 & ds1816 & im1500 { ds1816 = im1500; }
+:ld ds1816, #im1500 is op2119=0x2 & ds1816 & im1500 { ds1816 = im1500; resultflags(ds1816); }
 
 
 # Load 32-bit word into register from 32-bit aligned address immediate.
-:ld ds0400, [#addr] is op2116=0x0d & im1505 & ds0400 [ addr = im1505 * 4; ] { ds0400 = *[DM]:4 addr:2; }
+:ld ds0400, [#addr] is op2116=0x0d & im1505 & ds0400 [ addr = im1505 * 4; ] { ds0400 = *[DM]:4 addr:2; resultflags(ds0400); }
 
 
 # Store 32-bit word from register at 32-bit aligned address immediate.
@@ -133,6 +137,7 @@ attach variables [ ds1816 ] [
 	local mask = (1 << width) - 1;
 	local shifted = sa1814 >> en1309;
 	ds0300 = shifted & mask;
+	resultflags(ds0300);
 }
 :puti ds0300, sa1814, #st0804, #en1309 is op2119=0x7 & sa1814 & en1309 & st0804 & ds0300 {
 	local width = st0804 - en1309 + 1;
@@ -140,6 +145,7 @@ attach variables [ ds1816 ] [
 	local masked_src = sa1814 & mask;
 	local masked_dst = ds0300 & ~mask;
 	ds0300 = masked_dst | masked_src;
+	resultflags(ds0300);
 }
 
 
@@ -156,7 +162,7 @@ attach variables [ ds1816 ] [
 
 
 # Load 32-bit word into register from 32-bit aligned address from register.
-:ldw ds0400, [sb0905] is op2111=0x3f0 & op1010=0 & sb0905 & ds0400 { local addr = sb0905 * 4; ds0400 = *[DM]:4 addr:2; }
+:ldw ds0400, [sb0905] is op2111=0x3f0 & op1010=0 & sb0905 & ds0400 { local addr = sb0905 * 4; ds0400 = *[DM]:4 addr:2; resultflags(ds0400); }
 
 # Store 32-bit word from register at 32-bit aligned address from register.
 :stw sa0905, [sb0400] is op2111=0x3f1 & op1010=0 & sa0905 & sb0400 { local addr:2 = sb0400 * 4; *[DM]:4 addr = sa0905; }
@@ -169,6 +175,7 @@ attach variables [ ds1816 ] [
 	local mask = ~(0xff << shift);
 	local masked = ds0400 & mask;
 	ds0400 = masked | shifted;
+	resultflags(ds0400);
 }
 
 # Store byte from register at byte address from register. Byte is loaded from the register at the address modulo four.
@@ -180,4 +187,4 @@ attach variables [ ds1816 ] [
 }
 
 
-:mv ds0400, mulh is op2105=0x7e40 & ds0400 & mulh { ds0400 = mulh; }
+:mv ds0400, mulh is op2105=0x7e40 & ds0400 & mulh { ds0400 = mulh; resultflags(ds0400); }
