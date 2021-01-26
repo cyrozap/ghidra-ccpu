@@ -17,7 +17,7 @@ define register offset=0 size=4 [
 
 define register offset=0x1000 size=4 [
 	mulh
-	loop
+	loops
 	pc
 	sp  # Dummy stack pointer to make the decompiler work.
 ];
@@ -206,7 +206,7 @@ macro resultflags(op1) { # Set Z flag for results
 :jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !V goto inst_next; goto [jump_dest:2]; }
 :ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
 :rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
-:ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 {}  # TODO
+:ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 { loops = sa0400; }
 :lp     #loop_end  is op2115=0x3e & op1414=0 & im1300 [ loop_end = im1300 * 4; ] {}  # TODO
 
 
