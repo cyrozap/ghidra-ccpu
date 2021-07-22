@@ -1,8 +1,10 @@
 define alignment=4;
 
+
 define space IM type=ram_space size=2 default;
 define space DM type=ram_space size=2;
 define space register type=register_space size=4;
+
 
 define register offset=0 size=4 [
 	r0  r1  r2  r3
@@ -25,6 +27,7 @@ define register offset=0x1000 size=4 [
 define register offset=0x2000 size=1 [
 	V Z C
 ];
+
 
 define token instr(32)
 	op2119 = (19, 21)
@@ -60,6 +63,7 @@ define token instr(32)
 	im0905 = (5, 9)
 ;
 
+
 attach variables [ sa1814 sa1511 sa1410 sa1309 sa0905 sa0400 sb0905 sb0400 ds0400 ] [
 	r0  r1  r2  r3
 	r4  r5  r6  r7
@@ -82,6 +86,7 @@ attach variables [ ds1816 ] [
 	r0  r1  r2  r3
 	r4  r5  r6  r7
 ];
+
 
 macro addflags(op1, op2) {  # Flags set by signed add instructions
 	C = (scarry(op1,op2));  # Check for signed carry
