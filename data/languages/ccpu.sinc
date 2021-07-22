@@ -4,6 +4,8 @@ define alignment=4;
 define space IM type=ram_space size=2 default;
 define space DM type=ram_space size=2;
 
+define space PC_STACK type=ram_space size=1;
+define space CC_STACK type=ram_space size=1;
 define space LP_COUNT type=ram_space size=1;
 define space LP_START type=ram_space size=1;
 define space LP_ENABLE type=ram_space size=1;
@@ -45,6 +47,8 @@ define register offset=0x3000 size=1 [
 	lp_enable
 
 	# Pointers for internal stacks.
+	sp_pc_stack
+	sp_cc_stack
 	sp_lp_count
 	sp_lp_start
 	sp_lp_enable
@@ -123,6 +127,35 @@ attach variables [ ds1816 ] [
 ];
 
 
+macro push_cc() {
+	*[CC_STACK]:1 sp_cc_stack = V;
+	sp_cc_stack = sp_cc_stack + 1;
+	*[CC_STACK]:1 sp_cc_stack = Z;
+	sp_cc_stack = sp_cc_stack + 1;
+	*[CC_STACK]:1 sp_cc_stack = C;
+	sp_cc_stack = sp_cc_stack + 1;
+}
+
+macro pop_cc() {
+	sp_cc_stack = sp_cc_stack - 1;
+	C = *[CC_STACK]:1 sp_cc_stack;
+	sp_cc_stack = sp_cc_stack - 1;
+	Z = *[CC_STACK]:1 sp_cc_stack;
+	sp_cc_stack = sp_cc_stack - 1;
+	V = *[CC_STACK]:1 sp_cc_stack;
+}
+
+macro push_pc(val) {
+	*[PC_STACK]:2 sp_pc_stack = val;
+	sp_pc_stack = sp_pc_stack + 2;
+}
+
+macro pop_pc(val) {
+	sp_pc_stack = sp_pc_stack - 2;
+	local tmp:2 = *[PC_STACK]:2 sp_pc_stack;
+	val = tmp;
+}
+
 macro push_loop_state() {
 	*[LP_COUNT]:4 sp_lp_count = lp_count;
 	sp_lp_count = sp_lp_count + 4;
@@ -139,6 +172,15 @@ macro pop_loop_state() {
 	lp_start = *[LP_START]:2 sp_lp_start;
 	sp_lp_count = sp_lp_count - 4;
 	lp_count = *[LP_COUNT]:4 sp_lp_count;
+}
+
+macro call_enter() {
+	push_pc(&:2 inst_next);
+}
+
+macro call_return() {
+	pop_pc(pc);
+	return [pc];
 }
 
 macro addflags(op1, op2) {  # Flags set by signed add instructions
@@ -275,13 +317,13 @@ with: phase=1 {
 
 
 :jmp    #jump_dest is op2115=0x35 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { goto [jump_dest:2]; }
-:call   #jump_dest is op2115=0x36 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { call [jump_dest:2]; }
+:call   #jump_dest is op2115=0x36 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { call_enter(); call [jump_dest:2]; }
 :jmpz   #jump_dest is op2115=0x37 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !Z goto inst_next; goto [jump_dest:2]; }
 :jmpnz  #jump_dest is op2115=0x38 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if  Z goto inst_next; goto [jump_dest:2]; }
 :jmpc   #jump_dest is op2115=0x39 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !C goto inst_next; goto [jump_dest:2]; }
 :jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !V goto inst_next; goto [jump_dest:2]; }
-:ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
-:rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
+:ret               is op2115=0x3b & op1414=0 & im1300 { call_return(); }
+:rti               is op2115=0x3c & op1414=0 & im1300 { pop_cc(); call_return(); }
 :ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 { lp_count = sa0400; }
 :lp     #loop_end  is op2115=0x3e & op1414=0 & im1300 [
 	loop_end = im1300 * 4;
