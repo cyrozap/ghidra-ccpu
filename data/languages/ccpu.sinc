@@ -3,6 +3,11 @@ define alignment=4;
 
 define space IM type=ram_space size=2 default;
 define space DM type=ram_space size=2;
+
+define space LP_COUNT type=ram_space size=1;
+define space LP_START type=ram_space size=1;
+define space LP_ENABLE type=ram_space size=1;
+
 define space register type=register_space size=4;
 
 
@@ -19,14 +24,44 @@ define register offset=0 size=4 [
 
 define register offset=0x1000 size=4 [
 	mulh
-	loops
+
+	# Current loop counter.
+	lp_count
+];
+
+define register offset=0x2000 size=2 [
+	# Current loop start address.
+	lp_start
+
 	pc
 	sp  # Dummy stack pointer to make the decompiler work.
 ];
 
-define register offset=0x2000 size=1 [
+define register offset=0x3000 size=1 [
+	# Condition codes.
 	V Z C
+
+	# "loop enable" boolean.
+	lp_enable
+
+	# Pointers for internal stacks.
+	sp_lp_count
+	sp_lp_start
+	sp_lp_enable
 ];
+
+define register offset=0x4000 size=4 [
+	contextreg
+];
+
+
+define context contextreg
+	# Instruction decoding phase.
+	phase = (0, 0)
+
+	# Indicate that this is the last instruction in a loop.
+	lp_end = (1, 1) noflow
+;
 
 
 define token instr(32)
@@ -88,6 +123,24 @@ attach variables [ ds1816 ] [
 ];
 
 
+macro push_loop_state() {
+	*[LP_COUNT]:4 sp_lp_count = lp_count;
+	sp_lp_count = sp_lp_count + 4;
+	*[LP_START]:2 sp_lp_start = lp_start;
+	sp_lp_start = sp_lp_start + 2;
+	*[LP_ENABLE]:1 sp_lp_enable = lp_enable;
+	sp_lp_enable = sp_lp_enable + 1;
+}
+
+macro pop_loop_state() {
+	sp_lp_enable = sp_lp_enable - 1;
+	lp_enable = *[LP_ENABLE]:1 sp_lp_enable;
+	sp_lp_start = sp_lp_start - 2;
+	lp_start = *[LP_START]:2 sp_lp_start;
+	sp_lp_count = sp_lp_count - 4;
+	lp_count = *[LP_COUNT]:4 sp_lp_count;
+}
+
 macro addflags(op1, op2) {  # Flags set by signed add instructions
 	C = (scarry(op1,op2));  # Check for signed carry
 	V = C;
@@ -141,6 +194,24 @@ macro subucflags(op1, op2) {  # Flags set by unsigned sub with carry instruction
 macro resultflags(op1) { # Set Z flag for results
 	Z = op1 == 0;
 }
+
+
+:^instruction is phase=0 & instruction [ phase = 1; ] {
+	build instruction;
+}
+
+:^instruction is phase=0 & lp_end=1 & instruction [ phase = 1; ] {
+	if (lp_enable == 0) goto <end_loop>;
+	lp_count = lp_count - 1;
+	if (lp_count == 0) goto <end_loop>;
+	pc = lp_start;
+	goto [pc];
+	<end_loop>
+	pop_loop_state();
+	build instruction;
+}
+
+with: phase=1 {
 
 
 :nop is op2116=0x00 & op1515=0 {}
@@ -211,8 +282,16 @@ macro resultflags(op1) { # Set Z flag for results
 :jmpv   #jump_dest is op2115=0x3a & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { if !V goto inst_next; goto [jump_dest:2]; }
 :ret               is op2115=0x3b & op1414=0 & im1300 { return [0:2]; }  # FIXME
 :rti               is op2115=0x3c & op1414=0 & im1300 { return [0:2]; }  # FIXME
-:ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 { loops = sa0400; }
-:lp     #loop_end  is op2115=0x3e & op1414=0 & im1300 [ loop_end = im1300 * 4; ] unimpl  # TODO
+:ldcnt  sa0400     is op2115=0x3d & op1414=0 & sa0400 { lp_count = sa0400; }
+:lp     #loop_end  is op2115=0x3e & op1414=0 & im1300 [
+	loop_end = im1300 * 4;
+	lp_end = 1;
+	globalset(loop_end, lp_end);
+] {
+	push_loop_state();
+	lp_start = inst_next;
+	lp_enable = 1;
+}
 
 
 # Load 32-bit word into register from 32-bit aligned address from register.
@@ -243,3 +322,6 @@ macro resultflags(op1) { # Set Z flag for results
 
 # Move the high 32-bits of the most recent multiplication product into a register.
 :mv ds0400, mulh is op2106=0x7e40 & ds0400 & mulh { ds0400 = mulh; }
+
+
+}
