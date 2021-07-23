@@ -243,6 +243,8 @@ macro resultflags(op1) { # Set Z flag for results
 }
 
 :^instruction is phase=0 & lp_end=1 & instruction [ phase = 1; ] {
+	build instruction;
+
 	if (lp_enable == 0) goto <end_loop>;
 	lp_count = lp_count - 1;
 	if (lp_count == 0) goto <end_loop>;
@@ -250,7 +252,6 @@ macro resultflags(op1) { # Set Z flag for results
 	goto [pc];
 	<end_loop>
 	pop_loop_state();
-	build instruction;
 }
 
 with: phase=1 {
