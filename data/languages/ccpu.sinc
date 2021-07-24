@@ -306,13 +306,15 @@ with: phase=1 {
 	local shifted = sa1814 >> en1309;
 	ds0300 = shifted & mask;
 }
-:puti ds0300, sa1814, #st0804, #en1309 is op2119=0x7 & sa1814 & en1309 & st0804 & ds0300 {
-	local width = st0804 - en1309 + 1;
-	local mask = ((1 << width) - 1) << en1309;
-	local masked_src = sa1814 & mask;
-	local masked_dst = ds0300 & ~mask;
-	ds0300 = masked_dst | masked_src;
-}
+
+# NOTE: Hardware doesn't seem to actually support this instruction, and just treats it as an "exti".
+#:puti ds0300, sa1814, #st0804, #en1309 is op2119=0x7 & sa1814 & en1309 & st0804 & ds0300 {
+#	local width = st0804 - en1309 + 1;
+#	local mask = ((1 << width) - 1) << en1309;
+#	local masked_src = sa1814 & mask;
+#	local masked_dst = ds0300 & ~mask;
+#	ds0300 = masked_dst | masked_src;
+#}
 
 
 :jmp    #jump_dest is op2115=0x35 & op1414=0 & im1300 [ jump_dest = im1300 * 4; ] { goto [jump_dest:2]; }
