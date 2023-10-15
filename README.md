@@ -7,8 +7,10 @@ decompiler output for those untested instructions may be incorrect.
 ## Build and Install
 
 ```
-$ cd ghidra_9.*/Ghidra/Processors
-$ git clone https://github.com/cyrozap/ghidra-ccpu.git CCPU
-$ cd CCPU
-$ make
+$ git clone https://github.com/cyrozap/ghidra-ccpu.git
+$ cd ghidra-ccpu
+$ gradle
 ```
+
+The `dist` directory will now contain the extension zip file that you can
+install into Ghidra.
